@@ -1,4 +1,5 @@
 import argparse
+import copy
 import torch
 
 from llava.constants import IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN, DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN
@@ -60,6 +61,7 @@ def parse_args():
     parser.add_argument("--overwrite", type=lambda x: (str(x).lower() == 'true'), default=True)
     parser.add_argument("--for_get_frames_num", type=int, default=4)
     parser.add_argument("--load_8bit",  type=lambda x: (str(x).lower() == 'true'), default=False)
+    parser.add_argument("--torch_dtype",  type=str, default="half", choices=["half", "bfloat16"])
     parser.add_argument("--prompt", type=str, default=None) 
     parser.add_argument("--api_key", type=str, help="OpenAI API key")
     parser.add_argument("--mm_newline_position", type=str, default="no_token")
@@ -67,27 +69,26 @@ def parse_args():
     parser.add_argument("--add_time_instruction", type=str, default=False)
     return parser.parse_args()
 
-def load_video(video_path,args):
-    if args.for_get_frames_num == 0:
+
+def load_video(video_path, max_frames_num,fps=1,force_sample=False):
+    print(f"Loading video from {video_path} with max_frames_num={max_frames_num}")
+    if max_frames_num == 0:
         return np.zeros((1, 336, 336, 3))
     vr = VideoReader(video_path, ctx=cpu(0),num_threads=1)
     total_frame_num = len(vr)
     video_time = total_frame_num / vr.get_avg_fps()
-    fps = round(vr.get_avg_fps())
+    fps = round(vr.get_avg_fps()/fps)
     frame_idx = [i for i in range(0, len(vr), fps)]
     frame_time = [i/fps for i in frame_idx]
-    if len(frame_idx) > args.for_get_frames_num or args.force_sample:
-        sample_fps = args.for_get_frames_num
+    if len(frame_idx) > max_frames_num or force_sample:
+        sample_fps = max_frames_num
         uniform_sampled_frames = np.linspace(0, total_frame_num - 1, sample_fps, dtype=int)
         frame_idx = uniform_sampled_frames.tolist()
         frame_time = [i/vr.get_avg_fps() for i in frame_idx]
     frame_time = ",".join([f"{i:.2f}s" for i in frame_time])
     spare_frames = vr.get_batch(frame_idx).asnumpy()
     # import pdb;pdb.set_trace()
-
     return spare_frames,frame_time,video_time
-
-
 
 
 def load_video_base64(path):
@@ -140,8 +141,12 @@ def run_inference(args):
                         overwrite_config["rope_scaling"] = {"factor": float(scaling_factor), "type": "linear"}
                     overwrite_config["max_sequence_length"] = 4096 * scaling_factor
                     overwrite_config["tokenizer_model_max_length"] = 4096 * scaling_factor
+            else:
+                print(f"Overwriting model_name={model_name} with 'llava_qwen'")
+                model_name = "llava_qwen"
 
-            tokenizer, model, image_processor, context_len = load_pretrained_model(args.model_path, args.model_base, model_name, load_8bit=args.load_8bit, overwrite_config=overwrite_config)
+            tokenizer, model, image_processor, context_len = load_pretrained_model(args.model_path, args.model_base, model_name, load_8bit=args.load_8bit, overwrite_config=overwrite_config, torch_dtype=args.torch_dtype)
+            print(f"Pretrained model loaded from {args.model_path} with args:\nmodel_base={args.model_base}\nload_8bit={args.load_8bit}\noverwrite_config={overwrite_config}\ntorch_dtype={args.torch_dtype}")
         else:
             tokenizer, model, image_processor, context_len = load_pretrained_model(args.model_path, args.model_base, model_name)
     else:
@@ -191,12 +196,13 @@ def run_inference(args):
         sample_set["Q"] = question
         sample_set["video_name"] = video_path
         
+        # import ipdb;ipdb.set_trace()
 
         # Check if the video exists
         if os.path.exists(video_path):
             if "gpt4v" != args.model_path:
-                video,frame_time,video_time = load_video(video_path, args)
-                video = image_processor.preprocess(video, return_tensors="pt")["pixel_values"].half().cuda()
+                video,frame_time,video_time = load_video(video_path, args.for_get_frames_num, 1, args.force_sample)
+                video = image_processor.preprocess(video, return_tensors="pt")["pixel_values"].cuda().to(dtype=getattr(torch, args.torch_dtype))
                 video = [video]
             else:
                 spare_frames,frame_time,video_time = load_video_base64(video_path)
@@ -214,7 +220,7 @@ def run_inference(args):
             else:
                 qs = DEFAULT_IMAGE_TOKEN + "\n" + qs
 
-            conv = conv_templates[args.conv_mode].copy()
+            conv = copy.deepcopy(conv_templates[args.conv_mode])
             conv.append_message(conv.roles[0], qs)
             conv.append_message(conv.roles[1], None)
             prompt = conv.get_prompt()

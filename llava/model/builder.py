@@ -49,6 +49,8 @@ def load_pretrained_model(model_path, model_base, model_name, load_8bit=False, l
     else:
         is_multimodal = False
 
+    print(f"Loading model {model_name} from {model_path}. Base model: {model_base}")
+
     if "llava" in model_name.lower() or is_multimodal:
         # Load LLaVA model
         if "lora" in model_name.lower() and model_base is None:
@@ -185,6 +187,7 @@ def load_pretrained_model(model_path, model_base, model_name, load_8bit=False, l
                 or "nous-hermes" in model_name.lower()
                 or "llava-v1.6-34b" in model_name.lower()
                 or "llava-v1.5" in model_name.lower()
+                or "llava-next" in model_name.lower()
             ):
                 from llava.model.language_model.llava_llama import LlavaConfig
 
