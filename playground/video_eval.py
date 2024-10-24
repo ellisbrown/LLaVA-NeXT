@@ -23,6 +23,7 @@ import openai
 from PIL import Image
 
 import numpy as np
+import re
 
 def parse_args():
     """
@@ -72,6 +73,33 @@ def load_video(video_path, max_frames_num, fps=1, force_sample=False):
     frame_time = ",".join([f"{i:.2f}s" for i in frame_time])
     spare_frames = vr.get_batch(frame_idx).asnumpy()
     return spare_frames, frame_time, video_time
+
+
+# def clean_answer(answer):
+#     # Remove leading text, whitespace, and punctuation
+#     answer = re.sub(r'^[^A-Za-z]*([A-Za-z])[^A-Za-z]*$', r'\1', answer.strip().lower())
+#     return answer
+
+def clean_answer(answer):
+    # Extract the last alphabetic character sequence
+    matches = re.findall(r'[A-Za-z]+', answer)
+    return matches[-1].lower() if matches else ''
+
+
+def is_correct_answer(pred, gt_answer):
+    """
+    Compare predicted answer to ground truth answer, ignoring case, whitespace, and punctuation.
+
+    Args:
+        pred (str): The predicted answer.
+        gt_answer (str): The ground truth answer.
+
+    Returns:
+        bool: True if the answers match, False otherwise.
+    """
+    cleaned_pred = clean_answer(pred)
+    cleaned_gt_answer = clean_answer(gt_answer)
+    return cleaned_pred == cleaned_gt_answer
 
 
 def run_inference(args):
@@ -306,7 +334,7 @@ def run_inference(args):
         sample_set['pred'] = outputs
 
         # Compare 'pred' to 'gt_answer' to set 'correct'
-        correct = (outputs.strip().lower() == gt_answer.strip().lower())
+        correct = is_correct_answer(outputs, gt_answer)
         sample_set['correct'] = correct
 
         # Write the sample_set to the output JSONL file
@@ -317,3 +345,4 @@ def run_inference(args):
 if __name__ == "__main__":
     args = parse_args()
     run_inference(args)
+
