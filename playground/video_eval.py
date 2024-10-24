@@ -170,8 +170,13 @@ def run_inference(args):
 
     input_jsonl = args.input_jsonl
 
+    # Get the total number of lines in the input file
+    with open(input_jsonl, 'r') as infile:
+        total_lines = sum(1 for _ in infile)
+
     with open(input_jsonl, 'r') as infile, open(answers_file, 'w') as ans_file:
-        for line in tqdm(infile):
+        pbar = tqdm(infile, total=total_lines, desc="Processing")
+        for line in pbar:
             data = json.loads(line.strip())
 
             # Extract fields from data
@@ -352,6 +357,11 @@ def run_inference(args):
             ans_file.write(json.dumps(sample_set, ensure_ascii=False) + "\n")
             ans_file.flush()
 
+            # Update the progress bar with running accuracy
+            if total_samples > 0:
+                running_accuracy = (num_correct / total_samples) * 100
+                pbar.set_postfix(accuracy=f"{running_accuracy:.2f}%")
+
     # After processing all samples, print summary statistics
     print("\nEvaluation Results:")
     print(f"Total samples: {total_samples}")
@@ -372,6 +382,7 @@ def run_inference(args):
             csv_file.write(f"{total_samples},{num_correct},N/A\n")
     
     print(f"\nSummary statistics saved to {summary_stats_file}")
+    print(f"Output JSONL file saved to {answers_file}")
 
 
 if __name__ == "__main__":
