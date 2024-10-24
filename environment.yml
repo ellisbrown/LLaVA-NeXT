@@ -1,0 +1,24 @@
+name: llava
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+    -  -e ".[train]"
+    # - flash-attn "--no-build-isolation"
+    - openai
+    - flash-attn
+    - git+https://github.com/EvolvingLMMs-Lab/lmms-eval.git
+
+# note: make sure to set the LD_LIBRARY_PATH to the lib directory of the conda env
+# conda env config vars set CPLUS_INCLUDE_PATH=$CONDA_PREFIX/include:/opt/homebrew/include/eigen3
+# conda env config vars set LD_LIBRARY_PATH=$CONDA_PREFIX/lib:/opt/homebrew/lib
+# conda env config vars set CXXFLAGS="-I/opt/homebrew/include/eigen3"
+# conda env config vars set LDFLAGS="-L/opt/homebrew/lib"
+
+# conda env config vars set CPLUS_INCLUDE_PATH=$CONDA_PREFIX/include
+# conda env config vars set LD_LIBRARY_PATH=$CONDA_PREFIX/lib
+# conda env config vars unset CXXFLAGS
+# conda env config vars unset LDFLAGS

@@ -1,6 +1,6 @@
 #! /bin/bash
 
-ROOT_DIR="/nfs/ellisb/LLaVA-NeXT"
+ROOT_DIR="/data/weka/ellisb/LLaVA-NeXT"
 
 if [ ! -e $ROOT_DIR ]; then
     echo "The root dir does not exist. Exiting the script."
@@ -72,7 +72,7 @@ python3 playground/demo/video_demo.py \
     --mm_newline_position ${NEWLINE_POSITION:-grid} \
     --add_time_instruction True \
     --torch_dtype bfloat16 \
-    --prompt "Please provide a detailed description of the video, focusing on the main subjects, their actions, the background scenes."
+    --prompt "Did you see a yellow vespa or a bed first?"
+    # --prompt "Please provide a detailed description of the video, focusing on the main subjects, their actions, the background scenes."
 
-    # --prompt "Did you see a yellow vespa or a bed first?"
 
