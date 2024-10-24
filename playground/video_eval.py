@@ -75,30 +75,47 @@ def load_video(video_path, max_frames_num, fps=1, force_sample=False):
     return spare_frames, frame_time, video_time
 
 
-# def clean_answer(answer):
-#     # Remove leading text, whitespace, and punctuation
-#     answer = re.sub(r'^[^A-Za-z]*([A-Za-z])[^A-Za-z]*$', r'\1', answer.strip().lower())
-#     return answer
+def clean_answer(answer: str, choices: list) -> str:
+    """
+    Extract the predicted answer from the model's output based on the provided choices.
+    Prioritize matching choices at the beginning of the answer.
+    """
+    # Normalize the answer to lowercase for case-insensitive comparison
+    answer = answer.lower().strip()
+    
+    # Normalize choices to lowercase and create a mapping from normalized to original
+    normalized_choices = {choice.lower(): choice for choice in choices}
+    
+    # Try to match choices at the beginning of the answer
+    for choice_text in normalized_choices.keys():
+        pattern = r'^' + re.escape(choice_text) + r'\b'
+        if re.match(pattern, answer):
+            return normalized_choices[choice_text]  # Return the original choice text
+    
+    # If not found, look for exact matches of choices in the answer
+    for choice_text in normalized_choices.keys():
+        pattern = r'\b' + re.escape(choice_text) + r'\b'
+        if re.search(pattern, answer):
+            return normalized_choices[choice_text]  # Return the original choice text
+    
+    # If no match found, return empty string
+    return ''
 
-def clean_answer(answer):
-    # Extract the last alphabetic character sequence
-    matches = re.findall(r'[A-Za-z]+', answer)
-    return matches[-1].lower() if matches else ''
 
-
-def is_correct_answer(pred, gt_answer):
+def is_correct_answer(pred, gt_answer, choices=["A", "B", "C", "D"]):
     """
     Compare predicted answer to ground truth answer, ignoring case, whitespace, and punctuation.
 
     Args:
         pred (str): The predicted answer.
         gt_answer (str): The ground truth answer.
+        choices (list): List of answer choices.
 
     Returns:
         bool: True if the answers match, False otherwise.
     """
-    cleaned_pred = clean_answer(pred)
-    cleaned_gt_answer = clean_answer(gt_answer)
+    cleaned_pred = clean_answer(pred, choices).lower()
+    cleaned_gt_answer = clean_answer(gt_answer, choices).lower()
     return cleaned_pred == cleaned_gt_answer
 
 
@@ -346,7 +363,7 @@ def run_inference(args):
             sample_set['pred'] = outputs
 
             # Compare 'pred' to 'gt_answer' to set 'correct'
-            correct = is_correct_answer(outputs, gt_answer)
+            correct = is_correct_answer(outputs, gt_answer, choices)
             sample_set['correct'] = correct
 
             # Increment correct answers counter if applicable
