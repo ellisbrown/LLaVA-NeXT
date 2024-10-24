@@ -1,1 +1,1 @@
-{"idx": 0, "type": "v1", "task": "temporal_rel", "question": "Did you see a yellow vespa or a bed first? Select from the following choices.\n(A) yellow vespa\n(B) bed", "choices": ["A", "B"], "gt_answer": "A", "filename": "playground/demo/xU25MMA2N4aVtYay.mp4", "source": "oct23"}
+{"idx": 0, "type": "v1", "task": "temporal_rel", "question": "Did you see a yellow vespa or a bed first? Select from the following choices.\n(A) yellow vespa\n(B) bed", "choices": ["A", "B"], "gt_answer": "A", "filename": "xU25MMA2N4aVtYay.mp4", "source": "oct23"}

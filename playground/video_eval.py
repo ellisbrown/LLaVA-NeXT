@@ -158,6 +158,10 @@ def run_inference(args):
     else:
         args.add_time_instruction = False
 
+    # Initialize counters for total samples and correct answers
+    total_samples = 0
+    num_correct = 0
+
     # Create the output directory if it doesn't exist
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
@@ -182,6 +186,9 @@ def run_inference(args):
 
             sample_set = data.copy()
 
+            # Increment total samples counter
+            total_samples += 1
+
             # Construct full path to the video
             video_path = os.path.join(args.video_dir, filename)
 
@@ -202,7 +209,7 @@ def run_inference(args):
                 # Handle GPT-4V case if needed
                 raise NotImplementedError("GPT-4V not supported yet.")
 
-        # Run inference on the video and add the output to the list
+            # Run inference on the video and add the output to the list
             if "gpt4v" != args.model_path:
                 qs = question
 
@@ -326,23 +333,47 @@ def run_inference(args):
                     import pdb;pdb.set_trace()
 
 
-        if "mistral" not in cfg_pretrained._name_or_path.lower():
-            if outputs.endswith(stop_str):
-                outputs = outputs[:-len(stop_str)]
-        outputs = outputs.strip()
+            if "mistral" not in cfg_pretrained._name_or_path.lower():
+                if outputs.endswith(stop_str):
+                    outputs = outputs[:-len(stop_str)]
+            outputs = outputs.strip()
 
-        sample_set['pred'] = outputs
+            sample_set['pred'] = outputs
 
-        # Compare 'pred' to 'gt_answer' to set 'correct'
-        correct = is_correct_answer(outputs, gt_answer)
-        sample_set['correct'] = correct
+            # Compare 'pred' to 'gt_answer' to set 'correct'
+            correct = is_correct_answer(outputs, gt_answer)
+            sample_set['correct'] = correct
 
-        # Write the sample_set to the output JSONL file
-        ans_file.write(json.dumps(sample_set, ensure_ascii=False) + "\n")
-        ans_file.flush()
+            # Increment correct answers counter if applicable
+            if correct:
+                num_correct += 1
+
+            # Write the sample_set to the output JSONL file
+            ans_file.write(json.dumps(sample_set, ensure_ascii=False) + "\n")
+            ans_file.flush()
+
+    # After processing all samples, print summary statistics
+    print("\nEvaluation Results:")
+    print(f"Total samples: {total_samples}")
+    print(f"Number correct: {num_correct}")
+    if total_samples > 0:
+        accuracy = (num_correct / total_samples) * 100
+        print(f"Accuracy: {accuracy:.2f}%")
+    else:
+        print("No samples were processed.")
+
+    # Save summary statistics to a CSV file
+    summary_stats_file = os.path.join(args.output_dir, "summary_stats.csv")
+    with open(summary_stats_file, 'w') as csv_file:
+        csv_file.write("Total samples,Number correct,Accuracy\n")
+        if total_samples > 0:
+            csv_file.write(f"{total_samples},{num_correct},{accuracy:.2f}\n")
+        else:
+            csv_file.write(f"{total_samples},{num_correct},N/A\n")
+    
+    print(f"\nSummary statistics saved to {summary_stats_file}")
 
 
 if __name__ == "__main__":
     args = parse_args()
     run_inference(args)
-
