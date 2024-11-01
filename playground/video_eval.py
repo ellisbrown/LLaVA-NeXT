@@ -52,7 +52,7 @@ def parse_args():
     parser.add_argument("--api_key", type=str, help="OpenAI API key")
     parser.add_argument("--mm_newline_position", type=str, default="no_token")
     parser.add_argument("--force_sample", type=lambda x: (str(x).lower() == 'true'), default=False)
-    parser.add_argument("--add_time_instruction", type=lambda x: (str(x).lower() == 'true'), default=False)
+    parser.add_argument("--add_time_instruction", type=str, default=False)
     return parser.parse_args()
 
 
@@ -114,9 +114,11 @@ def is_correct_answer(pred, gt_answer, choices=["A", "B", "C", "D"]):
     Returns:
         bool: True if the answers match, False otherwise.
     """
-    cleaned_pred = clean_answer(pred, choices).lower()
-    cleaned_gt_answer = clean_answer(gt_answer, choices).lower()
-    return cleaned_pred == cleaned_gt_answer
+    cleaned_pred = clean_answer(pred, choices).upper()
+    cleaned_gt_answer = clean_answer(gt_answer, choices).upper()
+    correct = cleaned_pred == cleaned_gt_answer
+    print(f"Predicted: {cleaned_pred}, Ground Truth: {cleaned_gt_answer}, Correct: {correct} (Choices: {choices})")
+    return correct
 
 
 def run_inference(args):
@@ -173,6 +175,7 @@ def run_inference(args):
     if getattr(model.config, "add_time_instruction", None) is not None:
         args.add_time_instruction = model.config.add_time_instruction
     else:
+        print(f"add_time_instruction not found in model config. Overriding cli arg={args.add_time_instruction} to False.")
         args.add_time_instruction = False
 
     # Initialize counters for total samples and correct answers
@@ -213,6 +216,7 @@ def run_inference(args):
 
             # Construct full path to the video
             video_path = os.path.join(args.video_dir, filename)
+            print(f"Processing video: {video_path}")
 
             if not os.path.exists(video_path):
                 print(f"Video file {video_path} not found.")
@@ -236,6 +240,7 @@ def run_inference(args):
                 qs = question
 
                 # Prepare the prompt
+                print(f"Add time instruction: {args.add_time_instruction}")
                 if args.add_time_instruction:
                     time_instruction = (
                         f"The video lasts for {video_time:.2f} seconds, and {len(video[0])} frames are "
@@ -302,6 +307,8 @@ def run_inference(args):
                             stopping_criteria=[stopping_criteria]
                         )
                 outputs = tokenizer.batch_decode(output_ids, skip_special_tokens=True)[0].strip()
+                print(f"Prompt: {qs}")
+                print(f"Output: {outputs}")
             else:
                 openai.api_key = args.api_key  # Your API key here
 
@@ -404,4 +411,5 @@ def run_inference(args):
 
 if __name__ == "__main__":
     args = parse_args()
+    print(f"Arguments:\n{args}")
     run_inference(args)

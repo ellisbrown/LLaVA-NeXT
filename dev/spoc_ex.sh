@@ -35,9 +35,14 @@ POOL_STRIDE=2  # temporal pooling stride
 POOL_MODE=average  # average, max
 NEWLINE_POSITION=grid  # no_token, grid
 OVERWRITE=True
-VIDEO_PATH=playground/demo/xU25MMA2N4aVtYay.mp4
+# VIDEO_PATH=playground/demo/xU25MMA2N4aVtYay.mp4
 
-# VIDEO_PATH=playground/demo/raw_navigation_camera__0.mp4
+VIDEO_PATH=playground/demo/raw_navigation_camera__0.mp4
+VIDEO_PATH=data/oct23/000005/raw_navigation_camera__1.mp4
+QUESTION="Did you see the Window or the DiningTable first? Select from the following choices.\n(A) Window\n(B) DiningTable"
+
+VIDEO_PATH=data/oct23/000034/raw_navigation_camera__1.mp4
+QUESTION="Did you see the ObjaHandcart or the Sink first? Select from the following choices.\n(A) ObjaHandcart\n(B) Sink"
 
 if [ "$OVERWRITE" = False ]; then
     SAVE_DIR=$(basename $CKPT)_${CONV_MODE}_frames_${FRAMES}_stride_${POOL_STRIDE}_overwrite_${OVERWRITE}
@@ -72,7 +77,9 @@ python3 playground/demo/video_demo.py \
     --mm_newline_position ${NEWLINE_POSITION:-grid} \
     --add_time_instruction True \
     --torch_dtype bfloat16 \
-    --prompt "Did you see a yellow vespa or a bed first?"
+    --prompt "$QUESTION"
+
+    # --prompt "Did you see a yellow vespa or a bed first?"
     # --prompt "Please provide a detailed description of the video, focusing on the main subjects, their actions, the background scenes."
 
 
