@@ -1,4 +1,7 @@
 env/
+env2/
+.conda/
+__chroma_memory/
 
 # Python
 __pycache__

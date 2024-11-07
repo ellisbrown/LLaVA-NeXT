@@ -16,6 +16,10 @@ from tqdm import tqdm
 from decord import VideoReader, cpu
 
 from transformers import AutoConfig
+import chromadb
+from chromadb.utils.data_loaders import ImageLoader
+import chromadb.utils.embedding_functions as embedding_functions
+
 
 import cv2
 import base64
@@ -25,6 +29,9 @@ from PIL import Image
 
 import numpy as np
 import re
+
+MEM_OUTPUT_DIR = "./__chroma_memory"
+
 
 def parse_args():
     """
@@ -54,23 +61,71 @@ def parse_args():
     parser.add_argument("--mm_newline_position", type=str, default="no_token")
     parser.add_argument("--force_sample", type=lambda x: (str(x).lower() == 'true'), default=False)
     parser.add_argument("--add_time_instruction", type=str, default=False)
+    parser.add_argument("--retrieval", type=str, default=False)
     return parser.parse_args()
 
 
-def load_video(video_path, max_frames_num, fps=1, force_sample=False):
+def uniformly_sample_frames(n_frames, k):
+    """
+    Uniformly sample k frames from the total number of frames.
+    """
+    return np.linspace(0, n_frames - 1, k, dtype=int).tolist()
+
+
+def retrieve_frames_clip(
+        video_path,
+        fps,
+        question,
+        k,
+    ):
+    mem_client = chromadb.PersistentClient(path=str(MEM_OUTPUT_DIR))
+    
+    embedding_func = embedding_functions.OpenCLIPEmbeddingFunction()
+    data_loader = ImageLoader()
+
+    video_name = video_path.split("/")[-1]
+    memory = mem_client.get_or_create_collection(
+        name=video_name, embedding_function=embedding_func, data_loader=data_loader
+    )
+
+    vr = VideoReader(video_path, ctx=cpu(0), num_threads=1)
+    frame_idx = [i for i in range(0, len(vr), fps)]
+    frame_name_list = [str(i) for i in frame_idx]
+    all_frames = vr.get_batch(frame_idx).asnumpy()
+    frame_list = [frame for frame in all_frames]
+
+    print(f"Creating memory for video: {video_name}")
+    start_time = time.time()
+    memory.add(ids=frame_name_list, images=frame_list)
+    end_time = time.time()
+    print(f"Time to add images: {end_time - start_time}")
+
+    # retrieve k
+
+    results = memory.query(query_texts=question, include=["data"], n_results=k)
+
+    idxs = [int(i) for i in results['ids'][0]]  # to int
+    return sorted(idxs)  # temporally ordered
+
+
+def load_video(video_path, max_frames_num, fps=1, force_sample=False, question=None, retrieval=False):
     if max_frames_num == 0:
         return np.zeros((1, 336, 336, 3))
     vr = VideoReader(video_path, ctx=cpu(0), num_threads=1)
-    total_frame_num = len(vr)
-    video_time = total_frame_num / vr.get_avg_fps()
+    total_num_frames = len(vr)
+    video_time = total_num_frames / vr.get_avg_fps()
     fps = round(vr.get_avg_fps() / fps)
     frame_idx = [i for i in range(0, len(vr), fps)]
-    frame_time = [i / fps for i in frame_idx]
     if len(frame_idx) > max_frames_num or force_sample:
-        sample_fps = max_frames_num
-        uniform_sampled_frames = np.linspace(0, total_frame_num - 1, sample_fps, dtype=int)
-        frame_idx = uniform_sampled_frames.tolist()
-        frame_time = [i / vr.get_avg_fps() for i in frame_idx]
+        if retrieval:
+            if question is None:
+                raise ValueError("Question is required for retrieval.")
+            frame_idx = retrieve_frames_clip(video_path, fps, question, max_frames_num)
+        else:
+            frame_idx = uniformly_sample_frames(total_num_frames, max_frames_num)
+    elif retrieval:
+        print(f"Retrieval is not possible with {len(frame_idx)} frames. Using all frames. Max frames: {max_frames_num}")
+    frame_time = [i / fps for i in frame_idx]
     frame_time = ",".join([f"{i:.2f}s" for i in frame_time])
     spare_frames = vr.get_batch(frame_idx).asnumpy()
     return spare_frames, frame_time, video_time
@@ -226,7 +281,7 @@ def run_inference(args):
             # Load the video
             if args.model_path != "gpt4v":
                 video, frame_time, video_time = load_video(
-                    video_path, args.for_get_frames_num, 1, args.force_sample
+                    video_path, args.for_get_frames_num, 1, args.force_sample, question, args.retrieval
                 )
                 video = image_processor.preprocess(video, return_tensors="pt")["pixel_values"].cuda().to(
                     dtype=getattr(torch, args.torch_dtype)
@@ -243,11 +298,18 @@ def run_inference(args):
                 # Prepare the prompt
                 print(f"Add time instruction: {args.add_time_instruction}")
                 if args.add_time_instruction:
-                    time_instruction = (
-                        f"The video lasts for {video_time:.2f} seconds, and {len(video[0])} frames are "
-                        f"uniformly sampled from it. These frames are located at {frame_time}. "
-                        "Please answer the following questions related to this video."
-                    )
+                    if args.retrieval:
+                        time_instruction = (
+                            f"The video lasts for {video_time:.2f} seconds, and the most relevant "
+                            f"{len(video[0])} frames are retrieved based on the question. These "
+                            f"frames are located at {frame_time}. Please answer the following questions related to this video."
+                        )
+                    else:
+                        time_instruction = (
+                            f"The video lasts for {video_time:.2f} seconds, and {len(video[0])} frames are "
+                            f"uniformly sampled from it. These frames are located at {frame_time}. "
+                            "Please answer the following questions related to this video."
+                        )
                     qs = f'{time_instruction}\n{qs}'
 
                 if model.config.mm_use_im_start_end:

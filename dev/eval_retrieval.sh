@@ -48,11 +48,11 @@ else
 fi
 
 # Run the evaluation script
-python3 playground/video_eval.py \
+python3 playground/video_eval_retrieval.py \
     --model-path $CKPT \
     --video_dir ${VIDEO_DIR} \
     --input_jsonl ${INPUT_JSONL} \
-    --output_dir ./work_dirs/video_eval/$SAVE_DIR \
+    --output_dir ./work_dirs/video_eval_retrieval/$SAVE_DIR \
     --output_name pred \
     --overwrite ${OVERWRITE} \
     --mm_spatial_pool_stride ${POOL_STRIDE} \
@@ -61,4 +61,5 @@ python3 playground/video_eval.py \
     --mm_spatial_pool_mode ${POOL_MODE} \
     --mm_newline_position ${NEWLINE_POSITION} \
     --add_time_instruction True \
-    --torch_dtype bfloat16
+    --torch_dtype bfloat16 \
+    --retrieval True
