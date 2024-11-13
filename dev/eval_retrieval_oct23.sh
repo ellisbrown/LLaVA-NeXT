@@ -33,11 +33,8 @@ POOL_STRIDE=2  # temporal pooling stride
 POOL_MODE=average  # average, max
 NEWLINE_POSITION=grid  # no_token, grid
 OVERWRITE=True
+FPS=2
 
-
-# VIDEO_DIR=playground/demo/           # Directory containing the videos
-# INPUT_JSONL=data/example.jsonl  # Path to your input JSONL file
-# SOURCE=example
 
 # Set the base directory for videos and the path to the input JSONL file
 VIDEO_DIR=data/oct23/           # Directory containing the videos
@@ -45,7 +42,7 @@ INPUT_JSONL=data/oct23/combined_qa_pairs.jsonl  # Path to your input JSONL file
 SOURCE=oct23
 
 # Determine the save directory based on the overwrite flag
-SAVE_DIR="${SOURCE}_$(basename $CKPT)_${CONV_MODE}_frames_${FRAMES}_stride_${POOL_STRIDE}_32"
+SAVE_DIR="retrieval_${SOURCE}_$(basename $CKPT)_${CONV_MODE}_frames_${FRAMES}_stride_${POOL_STRIDE}_2"
 if [ "$OVERWRITE" = False ]; then
     SAVE_DIR="${SAVE_DIR}_overwrite_${OVERWRITE}"
     echo "Overwrite is False, saving to a new directory: $SAVE_DIR"
@@ -54,11 +51,11 @@ else
 fi
 
 # Run the evaluation script
-python3 playground/video_eval.py \
+python3 playground/video_eval_retrieval.py \
     --model-path $CKPT \
     --video_dir ${VIDEO_DIR} \
     --input_jsonl ${INPUT_JSONL} \
-    --output_dir ./work_dirs/video_eval/$SAVE_DIR \
+    --output_dir ./work_dirs/video_eval_retrieval/$SAVE_DIR \
     --output_name pred \
     --overwrite ${OVERWRITE} \
     --mm_spatial_pool_stride ${POOL_STRIDE:-4} \
@@ -67,4 +64,6 @@ python3 playground/video_eval.py \
     --mm_spatial_pool_mode ${POOL_MODE:-average} \
     --mm_newline_position ${NEWLINE_POSITION:-grid} \
     --add_time_instruction True \
-    --torch_dtype bfloat16
+    --torch_dtype bfloat16 \
+    --retrieval True \
+    --fps $FPS \

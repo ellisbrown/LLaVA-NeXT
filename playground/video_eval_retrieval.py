@@ -59,9 +59,10 @@ def parse_args():
     parser.add_argument("--torch_dtype",  type=str, default="half", choices=["half", "bfloat16"])
     parser.add_argument("--api_key", type=str, help="OpenAI API key")
     parser.add_argument("--mm_newline_position", type=str, default="no_token")
-    parser.add_argument("--force_sample", type=lambda x: (str(x).lower() == 'true'), default=False)
+    parser.add_argument("--force_sample", type=str, default=False)
     parser.add_argument("--add_time_instruction", type=str, default=False)
     parser.add_argument("--retrieval", type=str, default=False)
+    parser.add_argument("--fps", type=int, default=1)
     return parser.parse_args()
 
 
@@ -78,14 +79,19 @@ def retrieve_frames_clip(
         question,
         k,
     ):
-    mem_client = chromadb.PersistentClient(path=str(MEM_OUTPUT_DIR))
+    # video_name = video_path.split("/")[-1]
+    video_name = video_path.replace("/", "_")
+
+    mem_dir = os.path.join(MEM_OUTPUT_DIR, video_name)
+    mem_client = chromadb.PersistentClient(path=mem_dir)
     
     embedding_func = embedding_functions.OpenCLIPEmbeddingFunction()
     data_loader = ImageLoader()
 
-    video_name = video_path.split("/")[-1]
     memory = mem_client.get_or_create_collection(
-        name=video_name, embedding_function=embedding_func, data_loader=data_loader
+        name=video_name,
+        embedding_function=embedding_func,
+        data_loader=data_loader
     )
 
     vr = VideoReader(video_path, ctx=cpu(0), num_threads=1)
@@ -115,20 +121,28 @@ def load_video(video_path, max_frames_num, fps=1, force_sample=False, question=N
     total_num_frames = len(vr)
     video_time = total_num_frames / vr.get_avg_fps()
     fps = round(vr.get_avg_fps() / fps)
-    frame_idx = [i for i in range(0, len(vr), fps)]
-    if len(frame_idx) > max_frames_num or force_sample:
-        if retrieval:
+
+    # uniformly subsample frames via fps
+    frame_idx = [i for i in range(0, total_num_frames, fps)]
+    # total_num_frames = len(vr)  # no fps filtering
+    total_num_frames = len(frame_idx)
+
+    if total_num_frames > max_frames_num or force_sample:
+        # import ipdb; ipdb.set_trace()
+        if retrieval and total_num_frames > max_frames_num:
             if question is None:
                 raise ValueError("Question is required for retrieval.")
             frame_idx = retrieve_frames_clip(video_path, fps, question, max_frames_num)
+            print(f"Retrieved {max_frames_num}/{total_num_frames} frames.")
         else:
             frame_idx = uniformly_sample_frames(total_num_frames, max_frames_num)
+            print(f"Uniformly sampled {max_frames_num}/{total_num_frames} frames.")
     elif retrieval:
         print(f"Retrieval is not possible with {len(frame_idx)} frames. Using all frames. Max frames: {max_frames_num}")
     frame_time = [i / fps for i in frame_idx]
     frame_time = ",".join([f"{i:.2f}s" for i in frame_time])
     spare_frames = vr.get_batch(frame_idx).asnumpy()
-    return spare_frames, frame_time, video_time
+    return spare_frames, frame_time, video_time, total_num_frames
 
 
 def clean_answer(answer: str, choices: list) -> str:
@@ -280,8 +294,8 @@ def run_inference(args):
 
             # Load the video
             if args.model_path != "gpt4v":
-                video, frame_time, video_time = load_video(
-                    video_path, args.for_get_frames_num, 1, args.force_sample, question, args.retrieval
+                video, frame_time, video_time, total_num_frames = load_video(
+                    video_path, args.for_get_frames_num, args.fps, bool(args.force_sample), question, args.retrieval
                 )
                 video = image_processor.preprocess(video, return_tensors="pt")["pixel_values"].cuda().to(
                     dtype=getattr(torch, args.torch_dtype)
@@ -298,7 +312,7 @@ def run_inference(args):
                 # Prepare the prompt
                 print(f"Add time instruction: {args.add_time_instruction}")
                 if args.add_time_instruction:
-                    if args.retrieval:
+                    if args.retrieval and len(video) < total_num_frames:
                         time_instruction = (
                             f"The video lasts for {video_time:.2f} seconds, and the most relevant "
                             f"{len(video[0])} frames are retrieved based on the question. These "
