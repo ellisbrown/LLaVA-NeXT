@@ -17,6 +17,11 @@ def process_subset(config, dataset_root):
     subset_json_file = os.path.join(subset_image_folder, "data.json")
     os.makedirs(subset_image_folder, exist_ok=True)
 
+    if os.path.exists(subset_json_file):
+        print(f"Skipping subset: {config}. Already processed.")
+        with open(subset_json_file, "r") as f:
+            return json.load(f), cleaned_config
+
     # Load subset data
     print(f"Loading subset: {config}")
     data = load_dataset("lmms-lab/LLaVA-OneVision-Data", config, split="train")
@@ -52,13 +57,21 @@ def process_subset(config, dataset_root):
     return converted_data, cleaned_config
 
 
-def main(dataset_root):
+def main(dataset_root, reverse=False, randomized=False):
     # Create base directories
     os.makedirs(os.path.join(dataset_root, "images"), exist_ok=True)
 
     # Get all configurations
     configs = get_dataset_config_names("lmms-lab/LLaVA-OneVision-Data")
     print(f"Available configs: {configs}")
+
+    if reverse:
+        configs = list(reversed(configs))
+        print(f"Processing configs in reverse: {configs}")
+    elif randomized:
+        import random
+        random.shuffle(configs)
+        print(f"Processing configs in random order: {configs}")
 
     # Process each subset and collect data for combined json
     all_converted_data = []
@@ -82,17 +95,24 @@ def main(dataset_root):
 
 
 if __name__ == "__main__":
-    # import argparse
-    # parser = argparse.ArgumentParser()
+    import argparse
+    parser = argparse.ArgumentParser()
 
-    # parser.add_argument("--dataset_root", type=str, default="data/llava_ov")
+    parser.add_argument("--dataset_root", type=str, default="data/llava_ov")
+    parser.add_argument("--reverse", action="store_true")
+    parser.add_argument("--randomized", action="store_true")
 
-    # args = parser.parse_args()
+    args = parser.parse_args()
 
     # dataset_root = args.dataset_root
+    reverse = args.reverse
+    randomized = args.randomized
 
     dataset_root = "/data/weka/ellisb/datasets/LLaVA-OneVision-Data/"
 
-    print(f"dataset_root: {dataset_root}\n")
 
-    main(dataset_root)
+    print(f"dataset_root: {dataset_root}")
+    print(f"reverse: {reverse}")
+    print(f"randomized: {randomized}")
+
+    main(dataset_root, reverse, randomized)
