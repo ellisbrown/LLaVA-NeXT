@@ -1,12 +1,27 @@
+#!/bin/bash
+
+# Function to print logs with timestamp
+log() {
+    printf "\033[31m%s\033[0m %s\n" "$(date '+%Y-%m-%d %H:%M:%S')" "$1"
+}
+
+
+TIMESTAMP=$(TZ="America/New_York" date "+%Y%m%d_%H%M%S")
+log "Starting at $TIMESTAMP"
+
 # setting for single node
 export NNODES=1
 export RANK=0
 export ADDR="localhost"
-export PORT=29500
+# export PORT=29500
+PORT=$(( ( RANDOM % 64512 ) + 1024 ))
+log "using $ADDR:$PORT for master_addr:master_port"
+
+
 # export NUM_GPUS=8
 NUM_GPUS=$(nvidia-smi --query-gpu=name --format=csv,noheader | wc -l)
 export NUM_GPUS
-echo "NUM_GPUS: ${NUM_GPUS}"
+log "NUM_GPUS: ${NUM_GPUS}"
 
 export OMP_NUM_THREADS=8
 export NCCL_IB_DISABLE=0
@@ -26,29 +41,60 @@ VISION_MODEL_VERSION_CLEAN="${VISION_MODEL_VERSION//\//_}"
 
 nvidia-smi
 
+
 ############### Pretrain ################
 
 BASE_RUN_NAME="llavanext-google_siglip-so400m-patch14-384-Qwen_Qwen2-7B-Instruct-mlp2x_gelu-pretrain_blip558k_plain"
-echo "BASE_RUN_NAME: ${BASE_RUN_NAME}"
+log "BASE_RUN_NAME: ${BASE_RUN_NAME}"
 
-############### Finetune ################
 
-# Stage 2
-PROMPT_VERSION="qwen_1_5"
-RUN_NAME="spoc-ft-llava-onevision-${VISION_MODEL_VERSION_CLEAN}-${LLM_VERSION_CLEAN}-ov_stage_am9"
 
-# TODO: replace
-PREV_STAGE_CHECKPOINT="/data/weka/ellisb/LLaVA-NeXT/checkpoints/llava-onevision-qwen2-7b-ov" # replace it with your last checkpoint training from single image collection
-OUTPUT_CHECKPOINT="/data/weka/ellisb/LLaVA-NeXT/checkpoints/onevision/$RUN_NAME"
+############### Params ################
+# defaults
+# LR=1e-5
+# VIS_LR=2e-6
 
-echo "PREV_STAGE_CHECKPOINT: ${PREV_STAGE_CHECKPOINT}"
-echo "MID_RUN_NAME: ${RUN_NAME}"
+# half lr
+LR=5e-6
+VIS_LR=1e-7
+
+# PD_BS=1
+PD_BS=4  # H100
+GA_STEPS=2
+log "effective batch size: $((PD_BS * GA_STEPS * NUM_GPUS))
+    - accumulation steps: $GA_STEPS
+    - per device batch size: $PD_BS"
+EPOCHS=1
+
+############### Configure Data ################
 
 # folders
 DATA_YAML_PATH="/data/weka/ellisb/LLaVA-NeXT/scripts/train/spoc_test.yaml"
 IMAGE_FOLDER="/data/weka/ellisb/datasets/video/"
 VIDEO_FOLDER="/data/weka/ellisb/vida/experiment_output/dataset/jan7/val"
 
+
+############### Finetune ################
+
+# Stage 2
+PROMPT_VERSION="qwen_1_5"
+NOTE="_half_lr"
+RUN_NAME="spoc-ft-llava-ov-${VISION_MODEL_VERSION_CLEAN}-${LLM_VERSION_CLEAN}-ov_stage_am9${NOTE}_${TIMESTAMP}"
+
+# TODO: replace
+PREV_STAGE_CHECKPOINT="/data/weka/ellisb/LLaVA-NeXT/checkpoints/llava-onevision-qwen2-7b-ov" # replace it with your last checkpoint training from single image collection
+OUTPUT_CHECKPOINT="/data/weka/ellisb/LLaVA-NeXT/checkpoints/onevision/$RUN_NAME"
+
+log "PREV_STAGE_CHECKPOINT: ${PREV_STAGE_CHECKPOINT}"
+log "MID_RUN_NAME: ${RUN_NAME}"
+
+
+############### Configure WandB ################
+
+export WANDB_PROJECT=ellisb_llava_ov
+export WANDB_NAME=$RUN_NAME
+
+############### Run ################
 
 ACCELERATE_CPU_AFFINITY=1 torchrun --nproc_per_node="${NUM_GPUS}" --nnodes="${NNODES}" --node_rank="${RANK}" --master_addr="${ADDR}" --master_port="${PORT}" \
     llava/train/train_mem.py \
@@ -59,7 +105,7 @@ ACCELERATE_CPU_AFFINITY=1 torchrun --nproc_per_node="${NUM_GPUS}" --nnodes="${NN
     --image_folder $IMAGE_FOLDER \
     --video_folder $VIDEO_FOLDER \
     --mm_tunable_parts="mm_vision_tower,mm_mlp_adapter,mm_language_model" \
-    --mm_vision_tower_lr=2e-6 \
+    --mm_vision_tower_lr=$VIS_LR \
     --vision_tower ${VISION_MODEL_VERSION} \
     --mm_projector_type mlp2x_gelu \
     --mm_vision_select_layer -2 \
@@ -72,15 +118,15 @@ ACCELERATE_CPU_AFFINITY=1 torchrun --nproc_per_node="${NUM_GPUS}" --nnodes="${NN
     --bf16 True \
     --run_name $RUN_NAME \
     --output_dir $OUTPUT_CHECKPOINT \
-    --num_train_epochs 1 \
-    --per_device_train_batch_size 1 \
+    --num_train_epochs $EPOCHS \
+    --per_device_train_batch_size $PD_BS \
     --per_device_eval_batch_size 4 \
-    --gradient_accumulation_steps 2 \
+    --gradient_accumulation_steps $GA_STEPS \
     --evaluation_strategy "no" \
     --save_strategy "steps" \
     --save_steps 1000 \
     --save_total_limit 1 \
-    --learning_rate 1e-5 \
+    --learning_rate $LR \
     --weight_decay 0. \
     --warmup_ratio 0.03 \
     --lr_scheduler_type "cosine" \
@@ -97,4 +143,4 @@ ACCELERATE_CPU_AFFINITY=1 torchrun --nproc_per_node="${NUM_GPUS}" --nnodes="${NN
     --frames_upbound 32
 exit 0;
 
-# You can delete the sdpa attn_implementation if you want to use flash attn
+log "Finished at $(TZ="America/New_York" date "+%Y%m%d_%H%M%S")"
