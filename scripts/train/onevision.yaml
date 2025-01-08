@@ -177,6 +177,7 @@ datasets:
     sampling_strategy: all
   - json_path: /mnt/bn/vl-research/data/llava_instruct/real_vision_flan/llava_ofa_mantis-instruct_reformatted.json # released in lmms-lab/M4-Instruct
     sampling_strategy: all
+  # VIDEO DATA
   - json_path: /mnt/bn/vl-research/data/llava_instruct/real_vision_flan/academic_source_30s_v1_all.json # will be released in next version of LLaVA-NeXT-Video
     sampling_strategy: all
   - json_path: /mnt/bn/vl-research/data/llava_instruct/real_vision_flan/0718_0_30_s_academic_mc_v0_1_all.json # will be released in next version of LLaVA-NeXT-Video

@@ -3,6 +3,7 @@ env2/
 .conda/
 __chroma_memory/
 
+
 # Python
 __pycache__
 *.pyc
@@ -38,6 +39,8 @@ ckpts*
 .ipynb_checkpoints
 chunyl_scripts
 *.ipynb
+# allow jupyter notebooks in scripts
+!scripts/**/*.ipynb
 
 # DevContainer
 !.devcontainer/*
