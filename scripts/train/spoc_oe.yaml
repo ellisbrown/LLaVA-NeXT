@@ -1,0 +1,23 @@
+datasets:
+  # - json_path: /data/weka/ellisb/datasets/video/llava_video_178k/0_30_s_academic_v0_1/0_30_s_academic_oe_v0_1_qa_processed.json
+  #   llava_json_path: /mnt/bn/vl-research/data/llava_instruct/real_vision_flan/academic_source_30s_v1_all.json
+  #   sampling_strategy: all
+  # - json_path: /data/weka/ellisb/datasets/video/llava_video_178k/0_30_s_academic_v0_1/0_30_s_academic_mc_v0_1_qa_processed.json
+  #   llava_json_path: /mnt/bn/vl-research/data/llava_instruct/real_vision_flan/0718_0_30_s_academic_mc_v0_1_all.json
+  #   sampling_strategy: all
+  # - json_path: /data/weka/ellisb/datasets/video/llava_video_178k/llava_hound/sharegptvideo_qa_255k_processed.json
+  #   llava_json_path: /mnt/bn/vl-research/data/llava_instruct/real_vision_flan/sharegpt4video_255000.json
+  #   sampling_strategy: all
+  # - json_path: /data/weka/ellisb/datasets/video/llava_video_178k/0_30_s_academic_v0_1/0_30_s_academic_v0_1_cap_processed.json
+  #   llava_json_path: .nan
+  #   sampling_strategy: all
+
+
+
+
+  # - json_path: /data/weka/ellisb/vida/experiment_output/dataset/jan7/val/combined_llava_ov_train_mc.jsonl
+  #   llava_json_path: .nan
+  #   sampling_strategy: all
+  - json_path: /data/weka/ellisb/vida/experiment_output/dataset/jan7/val/combined_llava_ov_train_oe.jsonl
+    llava_json_path: .nan
+    sampling_strategy: all

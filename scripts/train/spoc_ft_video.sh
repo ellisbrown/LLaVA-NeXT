@@ -56,12 +56,16 @@ log "BASE_RUN_NAME: ${BASE_RUN_NAME}"
 
 # half lr
 LR=5e-6
-VIS_LR=1e-7
+VIS_LR=1e-6
 
-# PD_BS=1
+FRAMES=64
+
+PD_BS=1
 # PD_BS=2  # L40
-PD_BS=4  # H100
-GA_STEPS=2
+# PD_BS=4  # H100
+
+# GA_STEPS=2
+GA_STEPS=4
 log "effective batch size: $((PD_BS * GA_STEPS * NUM_GPUS))
     - accumulation steps: $GA_STEPS
     - per device batch size: $PD_BS"
@@ -69,8 +73,8 @@ EPOCHS=1
 
 ############### Configure Data ################
 
-# folders
-DATA_YAML_PATH="/data/weka/ellisb/LLaVA-NeXT/scripts/train/spoc_mc+oe.yaml"
+# folders3
+DATA_YAML_PATH="/data/weka/ellisb/LLaVA-NeXT/scripts/train/spoc_mc.yaml"
 IMAGE_FOLDER="/data/weka/ellisb/datasets/video/"
 VIDEO_FOLDER="/data/weka/ellisb/vida/experiment_output/dataset/jan7/val"
 
@@ -80,10 +84,12 @@ VIDEO_FOLDER="/data/weka/ellisb/vida/experiment_output/dataset/jan7/val"
 # Stage 2
 PROMPT_VERSION="qwen_1_5"
 NOTE="_half_lr_mc+oe"
-RUN_NAME="spoc-ft-llava-ov-${VISION_MODEL_VERSION_CLEAN}-${LLM_VERSION_CLEAN}-ov_stage_am9${NOTE}_${TIMESTAMP}"
+RUN_NAME="spoc-ft-llava-video-${VISION_MODEL_VERSION_CLEAN}-${LLM_VERSION_CLEAN}-ov_to_video_am9_${FRAMES}F_${NOTE}_${TIMESTAMP}"
 
-# TODO: replace
-PREV_STAGE_CHECKPOINT="/data/weka/ellisb/LLaVA-NeXT/checkpoints/llava-onevision-qwen2-7b-ov" # replace it with your last checkpoint training from single image collection
+# PREV_STAGE_CHECKPOINT="lmms-lab/llava-onevision-qwen2-7b-si"
+PREV_STAGE_CHECKPOINT="/data/weka/ellisb/LLaVA-NeXT/checkpoints/llava-video-7b-qwen2"
+# TODO: change to the llava-video ckpt
+
 OUTPUT_CHECKPOINT="/data/weka/ellisb/LLaVA-NeXT/checkpoints/onevision/$RUN_NAME"
 
 log "PREV_STAGE_CHECKPOINT: ${PREV_STAGE_CHECKPOINT}"
@@ -97,7 +103,8 @@ export WANDB_NAME=$RUN_NAME
 
 ############### Run ################
 
-ACCELERATE_CPU_AFFINITY=1 torchrun --nproc_per_node="${NUM_GPUS}" --nnodes="${NNODES}" --node_rank="${RANK}" --master_addr="${ADDR}" --master_port="${PORT}" \
+# ACCELERATE_CPU_AFFINITY=1 torchrun --nproc_per_node="${NUM_GPUS}" --nnodes="${NNODES}" --node_rank="${RANK}" --master_addr="${ADDR}" --master_port="${PORT}" \
+deepspeed --master_port 30000 \
     llava/train/train_mem.py \
     --deepspeed scripts/zero3.json \
     --model_name_or_path $PREV_STAGE_CHECKPOINT \
@@ -141,6 +148,10 @@ ACCELERATE_CPU_AFFINITY=1 torchrun --nproc_per_node="${NUM_GPUS}" --nnodes="${NN
     --torch_compile True \
     --torch_compile_backend "inductor" \
     --dataloader_drop_last True \
-    --frames_upbound 32
+    --frames_upbound $FRAMES \
+    --mm_newline_position grid \
+    --add_time_instruction True \
+    --force_sample True \
+    --mm_spatial_pool_stride 2
 
 log "Finished at $(TZ="America/New_York" date "+%Y%m%d_%H%M%S")"
