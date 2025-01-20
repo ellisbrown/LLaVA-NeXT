@@ -59,9 +59,10 @@ LR=5e-6
 VIS_LR=1e-6
 
 FRAMES=64
+FRAMES=32
 
-PD_BS=1
-# PD_BS=2  # L40
+# PD_BS=1
+PD_BS=2  # L40
 # PD_BS=4  # H100
 
 # GA_STEPS=2
@@ -83,8 +84,8 @@ VIDEO_FOLDER="/data/weka/ellisb/vida/experiment_output/dataset/jan7/val"
 
 # Stage 2
 PROMPT_VERSION="qwen_1_5"
-NOTE="_half_lr_mc+oe"
-RUN_NAME="spoc-ft-llava-video-${VISION_MODEL_VERSION_CLEAN}-${LLM_VERSION_CLEAN}-ov_to_video_am9_${FRAMES}F_${NOTE}_${TIMESTAMP}"
+NOTE="_half_lr_mc"
+RUN_NAME="spoc-ft-llava-video-${VISION_MODEL_VERSION_CLEAN}-${LLM_VERSION_CLEAN}-ov_to_video_am9_${FRAMES}F${NOTE}_${TIMESTAMP}"
 
 # PREV_STAGE_CHECKPOINT="lmms-lab/llava-onevision-qwen2-7b-si"
 PREV_STAGE_CHECKPOINT="/data/weka/ellisb/LLaVA-NeXT/checkpoints/llava-video-7b-qwen2"

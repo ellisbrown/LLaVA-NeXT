@@ -41,7 +41,8 @@ def process_subset(config, dataset_root):
             if not img_name.endswith(".jpg"):
                 img_name = f"{img_name}.jpg"
 
-            json_data["image"] = img_name
+            # json_data["image"] = img_name
+            json_data["image"] = os.path.join(cleaned_config, img_name)
 
             img_path = os.path.join(subset_image_folder, json_data["image"])
 

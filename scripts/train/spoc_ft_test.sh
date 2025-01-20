@@ -92,7 +92,7 @@ log "MID_RUN_NAME: ${RUN_NAME}"
 
 ############### Configure WandB ################
 
-export WANDB_PROJECT=ellisb_llava_ov
+export WANDB_PROJECT=video_sim2real
 export WANDB_NAME=$RUN_NAME
 
 ############### Run ################
