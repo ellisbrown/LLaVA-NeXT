@@ -1,0 +1,55 @@
+version: v2
+budget: ai2/prior
+description: {{.Env.DESCRIPTION}}
+tasks:
+- name: {{.Env.DESCRIPTION}}
+  image:
+    # beaker: ellisb/dev-20250106
+    beaker: ai2/cuda11.8-cudnn8-dev-ubuntu20.04
+  command: ['/bin/bash', '-c']
+  arguments:
+  - >-
+    echo "Running on $(hostname)" &&
+    echo "Setting up environment" &&
+    source $CONDA_ROOT/etc/profile.d/conda.sh &&
+    echo "CD-ing to project root: $PROJ_ROOT" &&
+    cd $PROJ_ROOT &&
+    script_path={{.Env.EXP_SCRIPT_PATH}} &&
+    echo "Running script at $script_path" &&
+    bash $script_path
+    --gpus {{.Env.GPUS}}
+    --replicas {{.Env.REPLICAS}}
+  datasets:
+  - mountPath: /data/weka/
+    source:
+      weka: prior-default
+  result:
+    # Beaker will capture anything that's written to this location and store it in the results
+    # dataset. This location is required to be a directory, not a file.
+    # path: /output
+    path: ""
+  envVars:
+  - name: GITHUB_TOKEN
+    secret: GITHUB_TOKEN
+  - name: WANDB_API_KEY
+    secret: WANDB_API_KEY
+  - name: OPENAI_API_KEY
+    secret: OPENAI_API_KEY
+  - name: HF_HOME
+    value: /data/weka/ellisb/hf
+  - name: PROJ_ROOT
+    value: /data/weka/ellisb/LLaVA-NeXT
+  - name: CONDA_ROOT
+    value: /data/weka/ellisb/miniforge3
+  - name: PORT
+    value: 29500
+  resources:
+    gpuCount: {{.Env.GPUS}}
+    sharedMemory: {{.Env.SHARED_MEMORY}}
+  context:
+    priority: low
+    preemptible: true
+  constraints:
+    cluster: [{{.Env.CLUSTER}}]
+  hostNetworking: true
+  replicas: {{.Env.REPLICAS}}  # number of identical tasks to run in parallel
