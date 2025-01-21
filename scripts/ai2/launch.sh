@@ -5,7 +5,7 @@ GPUS=8
 SHARED_MEMORY="250GiB"
 CLUSTER="jupiter"
 REPLICAS=1
-DESCRIPTION="ov_train"
+DESCRIPTION="vidS2R"
 EXP_SCRIPT_PATH=""
 
 # Function to log with timestamps
@@ -98,7 +98,10 @@ YAML_PATH="$DIR/beaker_exp_base.yaml"
 # create extended description: cluster_RxG + desc + script basename (no extension)
 script_basename=$(basename -- "$EXP_SCRIPT_PATH")
 script_basename_no_ext="${script_basename%.*}"
-extended_desc="${CLUSTER}_${REPLICAS}x${GPUS}_$DESCRIPTION_${script_basename_no_ext}"
+DESCRIPTION="${DESCRIPTION}_${script_basename_no_ext}"
+# "names may contain letters, numbers, the characters -_. and may not start with -"
+DESCRIPTION="${DESCRIPTION//[^a-zA-Z0-9._-]/_}"
+extended_desc="${CLUSTER}_${REPLICAS}x${GPUS}_${DESCRIPTION}"
 
 # transform script path to relative to project root
 fullpath=$(realpath $EXP_SCRIPT_PATH)
@@ -109,11 +112,12 @@ relativepath=${fullpath#*LLaVA-NeXT/}
 
 ################# Submit Job #################
 # set environment variables
-export REPLICAS=$REPLICAS
-export GPUS=$GPUS
-export SHARED_MEMORY=$SHARED_MEMORY
+export REPLICAS
+export GPUS
+export SHARED_MEMORY
 export CLUSTER=$cluster_fullname
-export DESCRIPTION=$extended_desc
+export DESCRIPTION
+export EXTENDED_DESCRIPTION=$extended_desc
 export EXP_SCRIPT_PATH=$relativepath
 
 # submit the job
@@ -127,6 +131,7 @@ echo "  - gpus: $GPUS"
 echo "  - shared_memory: $SHARED_MEMORY"
 echo "  - cluster: $CLUSTER"
 echo "  - description: $DESCRIPTION"
+echo "  - extended_description: $EXTENDED_DESCRIPTION"
 echo "  - exp_script_path: $EXP_SCRIPT_PATH"
 echo ""
 

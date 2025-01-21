@@ -1,6 +1,6 @@
 version: v2
 budget: ai2/prior
-description: {{.Env.DESCRIPTION}}
+description: {{.Env.EXTENDED_DESCRIPTION}}
 tasks:
 - name: {{.Env.DESCRIPTION}}
   image:
@@ -33,6 +33,8 @@ tasks:
     secret: GITHUB_TOKEN
   - name: WANDB_API_KEY
     secret: WANDB_API_KEY
+  - name: WANDB_PROJECT
+    value: video_sim2real
   - name: OPENAI_API_KEY
     secret: OPENAI_API_KEY
   - name: HF_HOME
@@ -43,6 +45,12 @@ tasks:
     value: /data/weka/ellisb/miniforge3
   - name: PORT
     value: 29500
+  - name: N_GPUS
+    value: {{.Env.GPUS}}
+  - name: N_NODES
+    value: {{.Env.REPLICAS}}
+  - name: DESCRIPTION
+    value: {{.Env.DESCRIPTION}}
   resources:
     gpuCount: {{.Env.GPUS}}
     sharedMemory: {{.Env.SHARED_MEMORY}}
