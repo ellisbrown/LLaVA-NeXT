@@ -15,9 +15,9 @@ datasets:
 
 
 
-  - json_path: /data/weka/ellisb/vida/experiment_output/dataset/jan7/val/combined_llava_ov_train_mc.jsonl
+  - json_path: /data/weka/ellisb/vida/experiment_output/dataset/jan7/combined_llava_ov_train_mc.jsonl
     llava_json_path: .nan
     sampling_strategy: all
-  # - json_path: /data/weka/ellisb/vida/experiment_output/dataset/jan7/val/combined_llava_ov_train_oe.jsonl
+  # - json_path: /data/weka/ellisb/vida/experiment_output/dataset/jan7/combined_llava_ov_train_oe.jsonl
   #   llava_json_path: .nan
   #   sampling_strategy: all

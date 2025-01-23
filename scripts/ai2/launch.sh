@@ -4,7 +4,7 @@
 GPUS=8
 SHARED_MEMORY="250GiB"
 CLUSTER="jupiter"
-REPLICAS=1
+NODES=1
 DESCRIPTION="vidS2R"
 EXP_SCRIPT_PATH=""
 
@@ -21,7 +21,7 @@ print_help() {
     echo "  --gpus <number>            Number of GPUs to use (default: 8)"
     echo "  --shared_memory <size>     Size of shared memory (default: 250GiB)"
     echo "  --cluster <name>           Cluster name (default: jupiter)"
-    echo "  --replicas <number>        Number of replicas (default: 1)"
+    echo "  --nodes <number>           Number of nodes (default: 1)"
     echo "  --description <text>       Description of the experiment (default: ov_train)"
     echo "  --script <path>            Path to the experiment script (REQUIRED)"
     echo "  --help                     Display this help message"
@@ -40,8 +40,8 @@ while [[ $# -gt 0 ]]; do
         --cluster)
             CLUSTER="$2"
             shift; shift ;;
-        --replicas)
-            REPLICAS="$2"
+        --nodes)
+            NODES="$2"
             shift; shift ;;
         --description)
             DESCRIPTION="$2"
@@ -101,7 +101,7 @@ script_basename_no_ext="${script_basename%.*}"
 DESCRIPTION="${DESCRIPTION}_${script_basename_no_ext}"
 # "names may contain letters, numbers, the characters -_. and may not start with -"
 DESCRIPTION="${DESCRIPTION//[^a-zA-Z0-9._-]/_}"
-extended_desc="${CLUSTER}_${REPLICAS}x${GPUS}_${DESCRIPTION}"
+extended_desc="${CLUSTER}_${NODES}x${GPUS}_${DESCRIPTION}"
 
 # transform script path to relative to project root
 fullpath=$(realpath $EXP_SCRIPT_PATH)
@@ -112,7 +112,7 @@ relativepath=${fullpath#*LLaVA-NeXT/}
 
 ################# Submit Job #################
 # set environment variables
-export REPLICAS
+export NODES
 export GPUS
 export SHARED_MEMORY
 export CLUSTER=$cluster_fullname
@@ -126,7 +126,7 @@ CMD="beaker experiment create $YAML_PATH"
 log "Submitting job"
 echo "> $CMD"
 echo "Variables:"
-echo "  - replicas: $REPLICAS"
+echo "  - nodes: $NODES"
 echo "  - gpus: $GPUS"
 echo "  - shared_memory: $SHARED_MEMORY"
 echo "  - cluster: $CLUSTER"

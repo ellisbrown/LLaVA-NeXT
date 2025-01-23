@@ -17,8 +17,6 @@ tasks:
     script_path={{.Env.EXP_SCRIPT_PATH}} &&
     echo "Running script at $script_path" &&
     bash $script_path
-    --gpus {{.Env.GPUS}}
-    --replicas {{.Env.REPLICAS}}
   datasets:
   - mountPath: /data/weka/
     source:
@@ -48,7 +46,7 @@ tasks:
   - name: N_GPUS
     value: {{.Env.GPUS}}
   - name: N_NODES
-    value: {{.Env.REPLICAS}}
+    value: {{.Env.NODES}}
   - name: DESCRIPTION
     value: {{.Env.DESCRIPTION}}
   resources:
@@ -60,4 +58,4 @@ tasks:
   constraints:
     cluster: [{{.Env.CLUSTER}}]
   hostNetworking: true
-  replicas: {{.Env.REPLICAS}}  # number of identical tasks to run in parallel
+  replicas: {{.Env.NODES}}  # number of identical tasks to run in parallel

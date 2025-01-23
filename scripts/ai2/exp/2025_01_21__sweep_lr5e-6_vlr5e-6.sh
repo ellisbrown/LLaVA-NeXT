@@ -13,17 +13,16 @@ ENV="/data/weka/ellisb/LLaVA-NeXT/.conda/ov"
 
 ############### Params ################
 LR=5e-6
-VIS_LR=1e-6
+VIS_LR=5e-6
+
 FRAMES=32
 PD_BS=2
 GA_STEPS=4
 EPOCHS=1
-# GLOBAL_BS=64
-# GLOBAL_BS=128
-GLOBAL_BS=256
+GLOBAL_BS=64
 
 ###############  Data ################
-DATA_YAML_PATH="/data/weka/ellisb/LLaVA-NeXT/scripts/train/spoc_ov_mc+oe_v3.yaml"
+DATA_YAML_PATH="/data/weka/ellisb/LLaVA-NeXT/scripts/train/spoc_mc.yaml"
 
 IMAGE_FOLDER="/data/weka/ellisb/datasets/video/all_images"
 VIDEO_FOLDER="/data/weka/ellisb/datasets/video/all_videos"
