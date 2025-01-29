@@ -56,6 +56,6 @@ tasks:
     priority: low
     preemptible: true
   constraints:
-    cluster: [{{.Env.CLUSTER}}]
+    cluster: [{{.Env.CLUSTERS}}]
   hostNetworking: true
   replicas: {{.Env.NODES}}  # number of identical tasks to run in parallel
