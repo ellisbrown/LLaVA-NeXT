@@ -107,7 +107,7 @@ parse_clusters() {
         cluster_array+=($(get_cluster_fullname "ceres"))
         cluster_array+=($(get_cluster_fullname "saturn"))
         cluster_array+=($(get_cluster_fullname "neptune"))
-    elif [[ "$input" == "80GB" ]]; then
+    elif [[ "$input" == "80gb" ]]; then
         # Add all 80GB clusters (A100 + H100)
         cluster_array+=($(get_cluster_fullname "jupiter"))
         cluster_array+=($(get_cluster_fullname "ceres"))
