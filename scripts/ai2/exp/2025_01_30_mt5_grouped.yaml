@@ -1,0 +1,12 @@
+
+datasets:
+  - json_path: /data/weka/ellisb/vida/experiment_output/dataset/jan17/spoc_train_mt5_descriptive_binary_mc.jsonl
+    sampling_strategy: all
+  - json_path: /data/weka/ellisb/vida/experiment_output/dataset/jan17/spoc_train_mt5_obj_count_mc.jsonl
+    sampling_strategy: all
+  - json_path: /data/weka/ellisb/vida/experiment_output/dataset/jan17/spoc_train_mt5_obj_rel_direction_mc.jsonl
+    sampling_strategy: all
+  - json_path: /data/weka/ellisb/vida/experiment_output/dataset/jan17/spoc_train_mt5_obj_rel_distance_mc.jsonl
+    sampling_strategy: all
+  - json_path: /data/weka/ellisb/vida/experiment_output/dataset/jan17/spoc_train_mt5_temporal_rel_mc.jsonl
+    sampling_strategy: all
