@@ -24,7 +24,7 @@ GLOBAL_BS=32
 
 ###############  Data ################
 # DATA_YAML_PATH="/data/weka/ellisb/LLaVA-NeXT/scripts/train/spoc_mc.yaml"
-DATA_YAML_PATH="/data/weka/ellisb/LLaVA-NeXT/scripts/ai2/exp/2025_02_01__mt1_rel_dist.yaml"
+DATA_YAML_PATH="/data/weka/ellisb/LLaVA-NeXT/scripts/ai2/exp/2025_02_01_mt1_rel_dist.yaml"
 
 IMAGE_FOLDER="/data/weka/ellisb/datasets/video/all_images"
 VIDEO_FOLDER="/data/weka/ellisb/datasets/video/all_videos"
