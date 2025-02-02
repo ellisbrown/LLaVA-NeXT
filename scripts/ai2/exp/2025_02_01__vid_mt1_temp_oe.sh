@@ -12,17 +12,18 @@ log "Starting at $TIMESTAMP"
 ENV="/data/weka/ellisb/LLaVA-NeXT/.conda/ov"
 
 ############### Params ################
-LR=5e-6
+LR=1e-6
 VIS_LR=1e-6
 
-FRAMES=32
-PD_BS=2
+# FRAMES=32
+FRAMES=64
+PD_BS=1
 GA_STEPS=4
 EPOCHS=1
-GLOBAL_BS=64
+GLOBAL_BS=32
 
 ###############  Data ################
-DATA_YAML_PATH="/data/weka/ellisb/LLaVA-NeXT/scripts/ai2/exp/2025_02_01_mt1_ct_oe.yaml"
+DATA_YAML_PATH="/data/weka/ellisb/LLaVA-NeXT/scripts/ai2/exp/2025_02_01_mt1_temp.yaml"
 
 IMAGE_FOLDER="/data/weka/ellisb/datasets/video/all_images"
 VIDEO_FOLDER="/data/weka/ellisb/datasets/video/all_videos"
@@ -37,9 +38,12 @@ VISION_MODEL_VERSION_CLEAN="${VISION_MODEL_VERSION//\//_}"
 
 ############### Run Settings ################
 PROMPT_VERSION="qwen_1_5"
-RUN_NAME="ft-llava-ov-${VISION_MODEL_VERSION_CLEAN}-${LLM_VERSION_CLEAN}-${FRAMES}F_${DESCRIPTION}"
+# VERS="ov"
+VERS="video"
+RUN_NAME="ft-llava-${VERS}-${VISION_MODEL_VERSION_CLEAN}-${LLM_VERSION_CLEAN}-${FRAMES}F_${DESCRIPTION}"
 
-PREV_STAGE_CHECKPOINT="/data/weka/ellisb/LLaVA-NeXT/checkpoints/llava-onevision-qwen2-7b-ov"
+# PREV_STAGE_CHECKPOINT="/data/weka/ellisb/LLaVA-NeXT/checkpoints/llava-onevision-qwen2-7b-ov"  # OneVision checkpoint
+PREV_STAGE_CHECKPOINT="/data/weka/ellisb/LLaVA-NeXT/checkpoints/llava-video-7b-qwen2"  # LLaVA-Video checkpoint
 OUTPUT_CHECKPOINT="/data/weka/ellisb/LLaVA-NeXT/checkpoints/onevision/$RUN_NAME"
 
 log "DESCRIPTION: ${DESCRIPTION}"
@@ -122,7 +126,11 @@ CMD="$DEEPSPEED \
     --torch_compile True \
     --torch_compile_backend 'inductor' \
     --dataloader_drop_last True \
-    --frames_upbound $FRAMES"
+    --frames_upbound $FRAMES \
+    --mm_newline_position grid \
+    --add_time_instruction True \
+    --force_sample True \
+    --mm_spatial_pool_stride 2"
 
 echo ""
 log "Running Command:"

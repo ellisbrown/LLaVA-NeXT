@@ -22,7 +22,7 @@ EPOCHS=1
 GLOBAL_BS=64
 
 ###############  Data ################
-DATA_YAML_PATH="/data/weka/ellisb/LLaVA-NeXT/scripts/ai2/exp/2025_02_01_mt1_ct_oe.yaml"
+DATA_YAML_PATH="/data/weka/ellisb/LLaVA-NeXT/scripts/ai2/exp/2025_02_01_mt1_rel_dir_oe.yaml"
 
 IMAGE_FOLDER="/data/weka/ellisb/datasets/video/all_images"
 VIDEO_FOLDER="/data/weka/ellisb/datasets/video/all_videos"

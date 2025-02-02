@@ -10,7 +10,17 @@ bash scripts/ai2/launch.sh --script scripts/ai2/exp/2025_02_01__vid_mt1_rel_dir.
 bash scripts/ai2/launch.sh --script scripts/ai2/exp/2025_02_01__vid_mt1_rel_dist.sh
 bash scripts/ai2/launch.sh --script scripts/ai2/exp/2025_02_01__vid_mt1_temp.sh
 
-
+# OE
+bash scripts/ai2/launch.sh --script scripts/ai2/exp/2025_02_01__mt1_desc_oe.sh
+bash scripts/ai2/launch.sh --script scripts/ai2/exp/2025_02_01__mt1_ct_oe.sh
+bash scripts/ai2/launch.sh --script scripts/ai2/exp/2025_02_01__mt1_rel_dir_oe.sh
+bash scripts/ai2/launch.sh --script scripts/ai2/exp/2025_02_01__mt1_rel_dist_oe.sh
+bash scripts/ai2/launch.sh --script scripts/ai2/exp/2025_02_01__mt1_temp_oe.sh
+bash scripts/ai2/launch.sh --script scripts/ai2/exp/2025_02_01__vid_mt1_desc_oe.sh
+bash scripts/ai2/launch.sh --script scripts/ai2/exp/2025_02_01__vid_mt1_ct_oe.sh
+bash scripts/ai2/launch.sh --script scripts/ai2/exp/2025_02_01__vid_mt1_rel_dir_oe.sh
+bash scripts/ai2/launch.sh --script scripts/ai2/exp/2025_02_01__vid_mt1_rel_dist_oe.sh
+bash scripts/ai2/launch.sh --script scripts/ai2/exp/2025_02_01__vid_mt1_temp_oe.sh
 
 
 
