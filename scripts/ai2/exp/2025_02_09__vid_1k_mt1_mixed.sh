@@ -23,7 +23,8 @@ EPOCHS=1
 GLOBAL_BS=32
 
 ###############  Data ################
-DATA_YAML_PATH="/data/weka/ellisb/LLaVA-NeXT/scripts/ai2/exp/2025_02_05_ovmixin_50k/ov100pct.yaml"
+# DATA_YAML_PATH="/data/weka/ellisb/LLaVA-NeXT/scripts/train/spoc_mc.yaml"
+DATA_YAML_PATH="/data/weka/ellisb/LLaVA-NeXT/scripts/ai2/exp/2025_02_09_1k_mt1_mixed.yaml"
 
 IMAGE_FOLDER="/data/weka/ellisb/datasets/video/all_images"
 VIDEO_FOLDER="/data/weka/ellisb/datasets/video/all_videos"
