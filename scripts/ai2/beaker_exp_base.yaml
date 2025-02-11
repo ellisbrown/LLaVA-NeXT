@@ -9,6 +9,7 @@ tasks:
   command: ['/bin/bash', '-c']
   arguments:
   - >-
+    set -euxo pipefail &&
     echo "Running on $(hostname)" &&
     echo "Setting up environment" &&
     source $CONDA_ROOT/etc/profile.d/conda.sh &&
@@ -16,7 +17,7 @@ tasks:
     cd $PROJ_ROOT &&
     script_path={{.Env.EXP_SCRIPT_PATH}} &&
     echo "Running script at $script_path" &&
-    bash $script_path
+    bash -euxo pipefail $script_path
   datasets:
   - mountPath: /data/weka/
     source:
