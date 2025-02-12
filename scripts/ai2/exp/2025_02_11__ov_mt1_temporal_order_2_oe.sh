@@ -12,22 +12,22 @@ log "Starting at $TIMESTAMP"
 ENV="/data/weka/ellisb/LLaVA-NeXT/.conda/ov"
 
 ############### Params ################
-LR=1e-6
+LR=5e-6
 VIS_LR=1e-6
 
-# FRAMES=32
-FRAMES=64
-PD_BS=1
+FRAMES=32
+PD_BS=2
 # GA_STEPS=4
 EPOCHS=1
-GLOBAL_BS=32
+GLOBAL_BS=64
 
 NUM_GPUS=$(nvidia-smi --query-gpu=name --format=csv,noheader | wc -l)
 # calculate the number gradient accumulation steps to match the global batch size
 GA_STEPS=$((GLOBAL_BS / (PD_BS * NUM_GPUS)))
 
 ###############  Data ################
-DATA_YAML_PATH="/data/weka/ellisb/LLaVA-NeXT/scripts/ai2/exp/2025_02_11_ai2_SAT_50k.yaml"
+# NOTE: directly passing a jsonl trains only on the specified data
+DATA_YAML_PATH="/data/weka/ellisb/vida/experiment_output/dataset/jan17_v2/spoc_train_mt1_temporal_order_2_oe.jsonl"
 
 IMAGE_FOLDER="/data/weka/ellisb/datasets/video/all_images"
 VIDEO_FOLDER="/data/weka/ellisb/datasets/video/all_videos"
@@ -42,12 +42,9 @@ VISION_MODEL_VERSION_CLEAN="${VISION_MODEL_VERSION//\//_}"
 
 ############### Run Settings ################
 PROMPT_VERSION="qwen_1_5"
-# VERS="ov"
-VERS="video"
-RUN_NAME="ft-llava-${VERS}-${VISION_MODEL_VERSION_CLEAN}-${LLM_VERSION_CLEAN}-${FRAMES}F_${DESCRIPTION}"
+RUN_NAME="ft-llava-ov-${VISION_MODEL_VERSION_CLEAN}-${LLM_VERSION_CLEAN}-${FRAMES}F_${DESCRIPTION}"
 
-# PREV_STAGE_CHECKPOINT="/data/weka/ellisb/LLaVA-NeXT/checkpoints/llava-onevision-qwen2-7b-ov"  # OneVision checkpoint
-PREV_STAGE_CHECKPOINT="/data/weka/ellisb/LLaVA-NeXT/checkpoints/llava-video-7b-qwen2"  # LLaVA-Video checkpoint
+PREV_STAGE_CHECKPOINT="/data/weka/ellisb/LLaVA-NeXT/checkpoints/llava-onevision-qwen2-7b-ov"
 OUTPUT_CHECKPOINT="/data/weka/ellisb/LLaVA-NeXT/checkpoints/onevision/$RUN_NAME"
 
 log "DESCRIPTION: ${DESCRIPTION}"
@@ -56,7 +53,7 @@ log "RUN_NAME: ${RUN_NAME}"
 
 ############### Verify ################
 
-NUM_GPUS=$(nvidia-smi --query-gpu=name --format=csv,noheader | wc -l)
+# NUM_GPUS=$(nvidia-smi --query-gpu=name --format=csv,noheader | wc -l)
 export NUM_GPUS
 log "NUM_GPUS: ${NUM_GPUS}"
 log " - passed N_GPUS: $N_GPUS"
@@ -130,11 +127,7 @@ CMD="$DEEPSPEED \
     --torch_compile True \
     --torch_compile_backend 'inductor' \
     --dataloader_drop_last True \
-    --frames_upbound $FRAMES \
-    --mm_newline_position grid \
-    --add_time_instruction True \
-    --force_sample True \
-    --mm_spatial_pool_stride 2"
+    --frames_upbound $FRAMES"
 
 echo ""
 log "Running Command:"

@@ -27,7 +27,8 @@ NUM_GPUS=$(nvidia-smi --query-gpu=name --format=csv,noheader | wc -l)
 GA_STEPS=$((GLOBAL_BS / (PD_BS * NUM_GPUS)))
 
 ###############  Data ################
-DATA_YAML_PATH="/data/weka/ellisb/LLaVA-NeXT/scripts/ai2/exp/2025_02_11_ai2_SAT_50k.yaml"
+# NOTE: directly passing a jsonl trains only on the specified data
+DATA_YAML_PATH="/data/weka/ellisb/vida/experiment_output/dataset/jan17_v2/spoc_train_mt1_house_size_est_oe.jsonl"
 
 IMAGE_FOLDER="/data/weka/ellisb/datasets/video/all_images"
 VIDEO_FOLDER="/data/weka/ellisb/datasets/video/all_videos"
