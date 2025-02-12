@@ -12,5 +12,5 @@ datasets:
     sampling_strategy: first:0
   - json_path: /data/weka/ellisb/vida/experiment_output/dataset/jan17_v2/spoc_train_mt1_obj_abs_distance_oe.jsonl
     sampling_strategy: first:0
-  - json_path:  /data/weka/ellisb/vida/experiment_output/dataset/jan17_v2/spoc_train_mt5_obj_long_size_est_oe.jsonl
+  - json_path:  /data/weka/ellisb/vida/experiment_output/dataset/jan17_v2/spoc_train_mt1_obj_short_size_est_oe.jsonl
     sampling_strategy: all

@@ -27,7 +27,7 @@ NUM_GPUS=$(nvidia-smi --query-gpu=name --format=csv,noheader | wc -l)
 GA_STEPS=$((GLOBAL_BS / (PD_BS * NUM_GPUS)))
 
 ###############  Data ################
-DATA_YAML_PATH="/data/weka/ellisb/LLaVA-NeXT/scripts/ai2/exp/2025_02_10_mt1_abs_dist_mc.yaml"
+DATA_YAML_PATH="/data/weka/ellisb/LLaVA-NeXT/scripts/ai2/exp/2025_02_10_mt1_long_size_est_mc.yaml"
 
 IMAGE_FOLDER="/data/weka/ellisb/datasets/video/all_images"
 VIDEO_FOLDER="/data/weka/ellisb/datasets/video/all_videos"
