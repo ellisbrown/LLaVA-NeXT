@@ -54,7 +54,8 @@ tasks:
     gpuCount: {{.Env.GPUS}}
     sharedMemory: {{.Env.SHARED_MEMORY}}
   context:
-    priority: low
+    # priority: low
+    priority: normal
     preemptible: true
   constraints:
     cluster: [{{.Env.CLUSTERS}}]
