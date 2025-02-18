@@ -1021,6 +1021,17 @@ class LazySupervisedDataset(Dataset):
 
                     rank0_print(f"Loaded {len(cur_data_dict)} samples from {json_path}")
                     self.list_data_dict.extend(cur_data_dict)
+        elif data_path.endswith(".jsonl"):
+            data_args.dataset_paths = [data_path]
+            rank0_print(f"Loading {data_path}")
+            with open(data_path, "r") as file:
+                n = 0
+                for line in file:
+                    cur_data_dict = json.loads(line.strip())
+                    self.list_data_dict.append(cur_data_dict)
+                    n += 1
+                rank0_print(f"Loaded {n} samples from {data_path}")
+
         else:
             data_args.dataset_paths = [data_path]
             rank0_print(f"Loading {data_path}")
