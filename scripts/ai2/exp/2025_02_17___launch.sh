@@ -37,3 +37,27 @@
 bash scripts/ai2/launch.sh --gpus 8 --clusters 80gb --script /data/weka/ellisb/LLaVA-NeXT/scripts/ai2/exp/2025_02_17__vid_mt1_mix_abs_dist_rel_dir.sh &
 bash scripts/ai2/launch.sh --gpus 8 --clusters 80gb --script /data/weka/ellisb/LLaVA-NeXT/scripts/ai2/exp/2025_02_17__vid_mt1_mix_abs_dist_rel_dir_OE.sh &
 bash scripts/ai2/launch.sh --gpus 8 --clusters 80gb --script /data/weka/ellisb/LLaVA-NeXT/scripts/ai2/exp/2025_02_17__vid_mt1_mix_abs_dist_rel_dir_temp_ord.sh &
+
+
+
+
+# ablation launch scripts
+
+bash scripts/ai2/launch.sh --gpus 8 --clusters 80gb --script /data/weka/ellisb/LLaVA-NeXT/scripts/ai2/exp/2025_02_17__vid_visual_ablation_2k_2qa_rgb.sh &
+
+VERSIONS=(
+    # "rgb"
+    "depth" "edge" "colored_edge" "colored_edge_no" "semantic_seg" "instance_seg" "mean_mask" "masked_bg")
+for VERSION in "${VERSIONS[@]}"
+do
+    # copy the rgb script, then replace "_rgb.yaml" with "_${VERSION}.yaml"
+    cp /data/weka/ellisb/LLaVA-NeXT/scripts/ai2/exp/2025_02_17__vid_visual_ablation_2k_2qa_rgb.sh /data/weka/ellisb/LLaVA-NeXT/scripts/ai2/exp/2025_02_17__vid_visual_ablation_2k_2qa_${VERSION}.sh
+    sed -i "s/_rgb.yaml/_${VERSION}.yaml/g" /data/weka/ellisb/LLaVA-NeXT/scripts/ai2/exp/2025_02_17__vid_visual_ablation_2k_2qa_${VERSION}.sh
+
+    # copy the rgb yaml, then replace "/qas/rgb/" with "/qas/${VERSION}/"
+    cp /data/weka/ellisb/LLaVA-NeXT/scripts/ai2/exp/2025_02_17_vid_visual_ablation_2k_2qa_rgb.yaml /data/weka/ellisb/LLaVA-NeXT/scripts/ai2/exp/2025_02_17_vid_visual_ablation_2k_2qa_${VERSION}.yaml
+    sed -i "s/qas\/rgb\//qas\/${VERSION}\//g" /data/weka/ellisb/LLaVA-NeXT/scripts/ai2/exp/2025_02_17_vid_visual_ablation_2k_2qa_${VERSION}.yaml
+
+    # launch
+    bash scripts/ai2/launch.sh --gpus 8 --clusters 80gb --script /data/weka/ellisb/LLaVA-NeXT/scripts/ai2/exp/2025_02_17__vid_visual_ablation_2k_2qa_${VERSION}.sh &
+done
