@@ -28,7 +28,7 @@ GA_STEPS=$((GLOBAL_BS / (PD_BS * NUM_GPUS)))
 
 ###############  Data ################
 # NOTE: directly passing a jsonl trains only on the specified data
-DATA_YAML_PATH="/data/weka/ellisb/LLaVA-NeXT/scripts/ai2/exp/2025_02_18_vid_visual_ablation_3k_3qa_rgb.yaml"
+DATA_YAML_PATH="/data/weka/ellisb/LLaVA-NeXT/scripts/ai2/exp/2025_02_18_visual_ablation_3k_3qa/2025_02_18_vid_visual_ablation_3k_3qa_rgb.yaml"
 
 IMAGE_FOLDER="/data/weka/ellisb/datasets/video/all_images"
 VIDEO_FOLDER="/data/weka/ellisb/datasets/video/all_videos"
